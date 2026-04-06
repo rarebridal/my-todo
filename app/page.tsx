@@ -1,65 +1,86 @@
-import Image from "next/image";
+"use client"
+
+import { TodoItem } from "@/components/TodoItem"
+import { useState, useEffect } from "react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+interface Todo {
+  id: number
+  text: string
+  done: boolean
+}
 
 export default function Home() {
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [input, setInput] = useState("")
+  const [filter, setFilter] = useState("all") // "all" | "active" | "done"
+  const filteredTodos = todos.filter(t => {
+  if (filter === "active") return !t.done
+  if (filter === "done") return t.done
+  return true // "all"
+  })
+
+  // Читаем из localStorage при первом рендере
+  useEffect(() => {
+    const saved = localStorage.getItem("todos")
+    if (saved) setTodos(JSON.parse(saved))
+  }, []) // [] — значит запустится один раз при загрузке страницы
+
+  // Сохраняем в localStorage каждый раз когда todos меняется
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos))
+  }, [todos]) // [todos] — запускается когда todos изменился
+
+  function addTodo() {
+    if (!input.trim()) return
+    setTodos([...todos, { id: Date.now(), text: input, done: false }])
+    setInput("")
+  }
+
+  function toggleTodo(id: number) {
+    setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t))
+  }
+
+  function deleteTodo(id: number) {
+    setTodos(todos.filter(t => t.id !== id))
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="max-w-md mx-auto mt-20 px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Myapp Todo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && addTodo()}
+              placeholder="Новая задача..."
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Button onClick={addTodo}>Добавить</Button>
+          </div>
+          <div className="flex gap-2">
+          <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>Все</Button>
+          <Button variant={filter === "active" ? "default" : "outline"} onClick={() => setFilter("active")}>Активные</Button>
+          <Button variant={filter === "done" ? "default" : "outline"} onClick={() => setFilter("done")}>Выполненные</Button>
         </div>
-      </main>
-    </div>
-  );
+         <ul className="space-y-2">
+          {filteredTodos.map(todo => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onToggle={toggleTodo}
+              onDelete={deleteTodo}
+            />
+          ))}
+        </ul>
+        </CardContent>
+      </Card>
+    </main>
+  )
 }
