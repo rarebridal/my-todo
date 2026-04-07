@@ -1,58 +1,22 @@
 "use client"
 
+import { useState } from "react"
+import { useTodos } from "@/hooks/useTodos"
 import { TodoItem } from "@/components/TodoItem"
-import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface Todo {
-  id: number
-  text: string
-  done: boolean
-}
-
 export default function Home() {
-  const [todos, setTodos] = useState<Todo[]>([])
+  const { todos, addTodo, toggleTodo, deleteTodo, editTodo } = useTodos()
   const [input, setInput] = useState("")
-  const [filter, setFilter] = useState("all") // "all" | "active" | "done"
+  const [filter, setFilter] = useState("all")
+
   const filteredTodos = todos.filter(t => {
-  if (filter === "active") return !t.done
-  if (filter === "done") return t.done
-  return true // "all"
+    if (filter === "active") return !t.done
+    if (filter === "done") return t.done
+    return true
   })
-
-  // Читаем из localStorage при первом рендере
-  useEffect(() => {
-    const saved = localStorage.getItem("todos")
-    if (saved) setTodos(JSON.parse(saved))
-  }, []) // [] — значит запустится один раз при загрузке страницы
-
-  // Сохраняем в localStorage каждый раз когда todos меняется
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos))
-  }, [todos]) // [todos] — запускается когда todos изменился
-
-  function addTodo() {
-    if (!input.trim()) return
-    setTodos([...todos, { id: Date.now(), text: input, done: false }])
-    setInput("")
-  }
-
-  function toggleTodo(id: number) {
-    setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t))
-  }
-
-  function editTodo(id: number, newText: string) {
-  setTodos(todos.map(t => t.id === id ? { ...t, text: newText } : t))
-  }
-
-  function deleteTodo(id: number) {
-    setTodos(todos.filter(t => t.id !== id))
-  }
-
-
 
   return (
     <main className="max-w-md mx-auto mt-20 px-4">
@@ -65,27 +29,27 @@ export default function Home() {
             <Input
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && addTodo()}
+              onKeyDown={e => e.key === "Enter" && addTodo(input) && setInput("")}
               placeholder="Новая задача..."
             />
-            <Button onClick={addTodo}>Добавить</Button>
+            <Button onClick={() => { addTodo(input); setInput("") }}>Добавить</Button>
           </div>
           <div className="flex gap-2">
-          <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>Все</Button>
-          <Button variant={filter === "active" ? "default" : "outline"} onClick={() => setFilter("active")}>Активные</Button>
-          <Button variant={filter === "done" ? "default" : "outline"} onClick={() => setFilter("done")}>Выполненные</Button>
-        </div>
-         <ul className="space-y-2">
-          {filteredTodos.map(todo => (
-            <TodoItem
-            key={todo.id}
-            todo={todo}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
-            onEdit={editTodo}
-          />
-          ))}
-        </ul>
+            <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>Все</Button>
+            <Button variant={filter === "active" ? "default" : "outline"} onClick={() => setFilter("active")}>Активные</Button>
+            <Button variant={filter === "done" ? "default" : "outline"} onClick={() => setFilter("done")}>Выполненные</Button>
+          </div>
+          <ul className="space-y-2">
+            {filteredTodos.map(todo => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onToggle={toggleTodo}
+                onDelete={deleteTodo}
+                onEdit={editTodo}
+              />
+            ))}
+          </ul>
         </CardContent>
       </Card>
     </main>
