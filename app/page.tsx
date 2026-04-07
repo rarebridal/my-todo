@@ -44,9 +44,15 @@ export default function Home() {
     setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t))
   }
 
+  function editTodo(id: number, newText: string) {
+  setTodos(todos.map(t => t.id === id ? { ...t, text: newText } : t))
+  }
+
   function deleteTodo(id: number) {
     setTodos(todos.filter(t => t.id !== id))
   }
+
+
 
   return (
     <main className="max-w-md mx-auto mt-20 px-4">
@@ -72,11 +78,12 @@ export default function Home() {
          <ul className="space-y-2">
           {filteredTodos.map(todo => (
             <TodoItem
-              key={todo.id}
-              todo={todo}
-              onToggle={toggleTodo}
-              onDelete={deleteTodo}
-            />
+            key={todo.id}
+            todo={todo}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+            onEdit={editTodo}
+          />
           ))}
         </ul>
         </CardContent>
