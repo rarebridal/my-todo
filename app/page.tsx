@@ -10,7 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 export default function Home() {
   const { todos, addTodo, toggleTodo, deleteTodo, editTodo } = useTodos()
   const [input, setInput] = useState("")
-  const [filter, setFilter] = useState("all")
+  
+  type Filter = "all" | "active" | "done"
+  const [filter, setFilter] = useState<Filter>("all")
 
   const filteredTodos = todos.filter(t => {
     if (filter === "active") return !t.done
