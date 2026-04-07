@@ -3,15 +3,18 @@ import { Todo } from "@/types"
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("todos")
     if (saved) setTodos(JSON.parse(saved))
+    setLoaded(true)
   }, [])
 
   useEffect(() => {
+    if (!loaded) return // не сохраняем пока не прочитали
     localStorage.setItem("todos", JSON.stringify(todos))
-  }, [todos])
+  }, [todos, loaded])
 
   function addTodo(text: string) {
     setTodos(prev => [...prev, { id: Date.now(), text, done: false }])
